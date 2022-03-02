@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+const (
+	DefaultCleanIntervalTime = 5
+)
+
 type sig struct {
 }
 type Pool struct {
