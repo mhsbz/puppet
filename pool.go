@@ -1,8 +1,6 @@
 package puppet
 
 import (
-	"math"
-	"sync"
 	"time"
 )
 
@@ -12,6 +10,7 @@ const (
 
 type sig struct {
 }
+
 type Pool struct {
 	// capacity of the pool.
 	capacity int32
@@ -23,32 +22,21 @@ type Pool struct {
 	workers []*Worker
 	// release is used to notice the pool to closed itself.
 	release chan sig
-	// lock for synchronous operation.
-	lock sync.Mutex
-	once sync.Once
 }
 
-// NewPool generates a instance of ants pool
-func NewPool(size int) (*Pool, error) {
-	return NewTimingPool(size, DefaultCleanIntervalTime)
+func NewPool(cap int32) *Pool {
+	return NewPoolWithExpire(cap, DefaultCleanIntervalTime)
 }
 
-// NewTimingPool generates a instance of ants pool with a custom timed task
-func NewTimingPool(size, expiry int) (*Pool, error) {
-	if size <= 0 {
-		return nil, ErrInvalidPoolSize
-	}
-	if expiry <= 0 {
-		return nil, ErrInvalidPoolExpiry
-	}
+func NewPoolWithExpire(cap int32, expireTime int32) *Pool {
+	workers := make([]*Worker, cap)
+	release := make(chan sig)
 	p := &Pool{
-		capacity:       int32(size),
-		freeSignal:     make(chan sig, math.MaxInt32),
-		release:        make(chan sig, 1),
-		expiryDuration: time.Duration(expiry) * time.Second,
+		capacity:       cap,
+		running:        0,
+		expiryDuration: time.Duration(expireTime),
+		workers:        workers,
+		release:        release,
 	}
-	// 启动定期清理过期worker任务，独立goroutine运行，
-	// 进一步节省系统资源
-	p.monitorAndClear()
-	return p, nil
+	return p
 }
