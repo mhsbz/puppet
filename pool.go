@@ -1,6 +1,7 @@
 package puppet
 
 import (
+	"sync"
 	"time"
 )
 
@@ -22,6 +23,8 @@ type Pool struct {
 	workers []*Worker
 	// release is used to notice the pool to closed itself.
 	release chan sig
+
+	lock sync.Mutex
 }
 
 func NewPool(cap int32) *Pool {
@@ -39,4 +42,19 @@ func NewPoolWithExpire(cap int32, expireTime int32) *Pool {
 		release:        release,
 	}
 	return p
+}
+
+func (p *Pool) Submit(task func()) {
+
+}
+
+func (p *Pool) getWorker() *Worker {
+	var w *Worker
+	//waiting := false
+	//// 加锁，检测队列中是否有可用worker，并进行相应操作
+	//p.lock.Lock()
+	//idleWorkers := p.workers
+	//n := len(idleWorkers) - 1
+	return w
+
 }
